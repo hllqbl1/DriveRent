@@ -1,0 +1,13 @@
+# Environment
+.env
+.env.*
+
+# Allow example environment
+!.env.example
+
+# Build files
+bin/
+dist/
+
+# Logs
+*.log
