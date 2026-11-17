@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/hllqbl1/DriveRent/backend/internal/database"
+	"github.com/hllqbl1/DriveRent/backend/internal/modules/users"
+	"github.com/hllqbl1/DriveRent/backend/internal/routes"
 	"github.com/joho/godotenv"
 )
 
@@ -23,10 +25,22 @@ func main() {
 
 	log.Println("Database berhasil terhubung!")
 
+	// Membuat repository
+	userRepo := users.NewUserRepository(db)
+
+	// Membuat service
+	userService := users.NewUserService(userRepo)
+
+	// Membuat handler
+	userHandler := users.NewUserHandler(userService)
+
+	// Mendaftarkan routes
+	mux := routes.SetupRoutes(userHandler)
+
 	// Menjalankan HTTP server
 	log.Println("Server berjalan di http://localhost:8080")
 
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Fatal("Server gagal dijalankan: ", err)
 	}
 }
