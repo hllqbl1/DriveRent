@@ -3,32 +3,44 @@ package routes
 import (
 	"net/http"
 
+	"github.com/hllqbl1/DriveRent/backend/internal/middleware"
 	"github.com/hllqbl1/DriveRent/backend/internal/modules/payments"
 )
 
 func RegisterPaymentRoutes(
 	mux *http.ServeMux,
 	handler payments.PaymentHandler,
+	jwtSecret string,
 ) {
-	// Payment
-	mux.HandleFunc("POST /api/payments", handler.CreatePayment)
-	mux.HandleFunc("GET /api/payments", handler.GetAllPayments)
-	mux.HandleFunc("GET /api/payments/{id}", handler.GetPaymentByID)
+	auth := middleware.AuthMiddleware(jwtSecret)
+	adminOrStaff := middleware.RequireRole("admin", "staff")
 
-	// Payment history by reservation
-	mux.HandleFunc(
-		"GET /api/reservations/{reservation_id}/payments",
-		handler.GetPaymentsByReservationID,
+	// Customer yang sudah login bisa membuat pembayaran
+	mux.Handle("POST /api/payments",
+		auth(http.HandlerFunc(handler.CreatePayment)),
 	)
 
-	// Payment verification
-	mux.HandleFunc(
-		"PATCH /api/payments/{id}/verify",
-		handler.VerifyPayment,
+	// Admin dan Staff
+	mux.Handle("GET /api/payments",
+		auth(adminOrStaff(http.HandlerFunc(handler.GetAllPayments))),
 	)
 
-	mux.HandleFunc(
-		"PATCH /api/payments/{id}/reject",
-		handler.RejectPayment,
+	mux.Handle("GET /api/payments/{id}",
+		auth(adminOrStaff(http.HandlerFunc(handler.GetPaymentByID))),
+	)
+
+	// Customer yang login bisa melihat riwayat pembayaran.
+	// Handler tetap harus memeriksa kepemilikan reservasi.
+	mux.Handle("GET /api/reservations/{reservation_id}/payments",
+		auth(http.HandlerFunc(handler.GetPaymentsByReservationID)),
+	)
+
+	// Admin dan Staff
+	mux.Handle("PATCH /api/payments/{id}/verify",
+		auth(adminOrStaff(http.HandlerFunc(handler.VerifyPayment))),
+	)
+
+	mux.Handle("PATCH /api/payments/{id}/reject",
+		auth(adminOrStaff(http.HandlerFunc(handler.RejectPayment))),
 	)
 }

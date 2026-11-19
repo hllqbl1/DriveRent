@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/hllqbl1/DriveRent/backend/internal/middleware"
 )
 
 type ReservationHandler interface {
@@ -40,12 +42,12 @@ func writeError(w http.ResponseWriter, status int, message string) {
 }
 
 // CreateReservation membuat reservasi baru.
+// CreateReservation membuat reservasi baru.
 func (h *reservationHandler) CreateReservation(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
 	var request struct {
-		UserID    int64  `json:"user_id"`
 		VehicleID int64  `json:"vehicle_id"`
 		StartDate string `json:"start_date"`
 		EndDate   string `json:"end_date"`
@@ -53,6 +55,18 @@ func (h *reservationHandler) CreateReservation(
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		writeError(w, http.StatusBadRequest, "Format JSON tidak valid")
+		return
+	}
+
+	// Ambil User ID dari JWT, bukan dari request body.
+	userID, ok := middleware.GetUserID(r.Context())
+	if !ok || userID <= 0 {
+		writeError(w, http.StatusUnauthorized, "User tidak terautentikasi")
+		return
+	}
+
+	if request.VehicleID <= 0 {
+		writeError(w, http.StatusBadRequest, "Vehicle ID tidak valid")
 		return
 	}
 
@@ -70,7 +84,7 @@ func (h *reservationHandler) CreateReservation(
 
 	err = h.service.CreateReservation(
 		r.Context(),
-		request.UserID,
+		userID,
 		request.VehicleID,
 		startDate,
 		endDate,

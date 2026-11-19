@@ -1,0 +1,9 @@
+import { useState } from 'react'
+import { paymentApi } from '../../services/api'
+export default function Payments() {
+  const [form,setForm] = useState({reservation_id:'',payment_method:'transfer',payment_proof:''})
+  const [message,setMessage] = useState('')
+  const [error,setError] = useState('')
+  async function submit(e) { e.preventDefault(); setError('');setMessage('');try { const r=await paymentApi.create({reservation_id:Number(form.reservation_id),payment_method:form.payment_method,payment_proof:form.payment_proof || null});setMessage(r?.message || 'Pembayaran berhasil dibuat.') } catch(e){setError(e.message)} }
+  return <div><h1 className="text-3xl font-black">Pembayaran</h1><p className="mt-2 text-slate-500">Kirim informasi pembayaran untuk reservasi yang sudah dibuat.</p><form onSubmit={submit} className="mt-6 max-w-xl space-y-4 rounded-2xl border bg-white p-5"><label className="block text-sm font-semibold">ID reservasi<input required type="number" min="1" value={form.reservation_id} onChange={e=>setForm({...form,reservation_id:e.target.value})} className="mt-2 w-full rounded-xl border px-4 py-3" /></label><label className="block text-sm font-semibold">Metode pembayaran<select value={form.payment_method} onChange={e=>setForm({...form,payment_method:e.target.value})} className="mt-2 w-full rounded-xl border px-4 py-3"><option value="transfer">Transfer</option><option value="cash">Tunai</option></select></label><label className="block text-sm font-semibold">URL / nama bukti pembayaran<input value={form.payment_proof} onChange={e=>setForm({...form,payment_proof:e.target.value})} className="mt-2 w-full rounded-xl border px-4 py-3" placeholder="https://..." /></label><button className="rounded-xl bg-blue-700 px-5 py-3 font-bold text-white">Kirim pembayaran</button>{message&&<p className="text-sm text-emerald-700">{message}</p>}{error&&<p className="text-sm text-red-700">{error}</p>}</form></div>
+}
