@@ -153,10 +153,13 @@ export const paymentApi = {
   create: (payload) =>
     apiRequest("/payments", {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: payload instanceof FormData ? payload : JSON.stringify(payload),
     }),
 
   all: () => apiRequest("/payments"),
+
+  byReservation: (reservationId) =>
+    apiRequest(`/reservations/${reservationId}/payments`),
 
   verify: (id) =>
     apiRequest(`/payments/${id}/verify`, {
@@ -191,6 +194,18 @@ export const rentalApi = {
 
 export const returnApi = {
   all: () => apiRequest("/returns"),
+
+  create: (payload) =>
+    apiRequest("/returns", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+};
+
+export const returnsApi = {
+  all: () => apiRequest("/returns"),
+
+  byId: (id) => apiRequest(`/returns/${id}`),
 
   create: (payload) =>
     apiRequest("/returns", {

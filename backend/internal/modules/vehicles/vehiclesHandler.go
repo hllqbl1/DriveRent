@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -363,6 +364,9 @@ func (h *vehicleHandler) DeleteVehicle(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.DeleteVehicle(r.Context(), id)
 	if err != nil {
+		// Tampilkan penyebab asli kegagalan di terminal backend.
+		log.Printf("Gagal menghapus kendaraan ID %d: %v", id, err)
+
 		if err == ErrVehicleNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return

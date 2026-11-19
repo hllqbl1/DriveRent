@@ -1,5 +1,9 @@
 import { Link } from "react-router";
 
+const API_ORIGIN = (
+  import.meta.env.VITE_API_URL || "http://localhost:8080/api"
+).replace(/\/api\/?$/, "");
+
 const fallbackImages = {
   avanza: "/images/avanza.jpg",
   brio: "/images/brio.jpg",
@@ -16,7 +20,12 @@ export default function VehicleCard({ vehicle }) {
       normalizedName.includes(key),
     )?.[1] || "/images/default-car.jpg";
 
-  const imageUrl = vehicle.image || fallbackImage;
+  const imageUrl = vehicle.image
+    ? vehicle.image.startsWith("http://") ||
+      vehicle.image.startsWith("https://")
+      ? vehicle.image
+      : `${API_ORIGIN}${vehicle.image.startsWith("/") ? "" : "/"}${vehicle.image}`
+    : fallbackImage;
 
   const price = Number(vehicle.price_per_day || 0).toLocaleString("id-ID");
 
@@ -29,7 +38,7 @@ export default function VehicleCard({ vehicle }) {
           className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
           onError={(event) => {
             event.currentTarget.onerror = null;
-            event.currentTarget.src = "/images/default-car.jpg";
+            event.currentTarget.src = fallbackImage;
           }}
         />
 
